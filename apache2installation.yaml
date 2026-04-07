@@ -1,0 +1,33 @@
+---
+- name: Install Apache and change port
+  hosts: localhost
+  become: yes
+  connection: local
+
+  tasks:
+
+    - name: Install apache2
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+
+    - name: Change port from 8080 to 8081 in ports.conf
+      replace:
+        path: /etc/apache2/ports.conf
+        regexp: 'Listen 8080'
+        replace: 'Listen 8081'
+      notify: Restart Apache
+
+    - name: Change VirtualHost port to 8081
+      replace:
+        path: /etc/apache2/sites-available/000-default.conf
+        regexp: '<VirtualHost \*:8080>'
+        replace: '<VirtualHost *:8081>'
+      notify: Restart Apache
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
